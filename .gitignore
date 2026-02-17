@@ -132,7 +132,7 @@ logs/
 *.keras
 *.h5
 *.pb
-test_images/
+
 temporary_files/
 
 # Docker
