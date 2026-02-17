@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PneumoNet AI - Pneumonia Detection</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1 class="logo">🫁 PneumoNet AI</h1>
+                <p class="tagline">Pneumonia Detection from Chest X-Ray Images</p>
+            </div>
+            <div class="navbar-menu">
+                <button class="btn-small" id="apiStatusBtn" onclick="checkApiStatus()">API Status</button>
+                <button class="btn-small" id="thresholdBtn" onclick="openThresholdModal()">⚙️ Threshold</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header Section -->
+        <section class="header-section">
+            <h2>Medical Imaging Analysis</h2>
+            <p>Upload chest X-ray images to detect pneumonia using advanced deep learning</p>
+        </section>
+
+        <!-- API Status Alert -->
+        <div id="statusAlert" class="alert alert-hidden"></div>
+
+        <!-- Statistics Dashboard -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🧠</div>
+                <h3>Model</h3>
+                <p>MobileNetV2</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <h3>Accuracy</h3>
+                <p>High Performance</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <h3>Speed</h3>
+                <p><100-300ms</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔒</div>
+                <h3>Security</h3>
+                <p>Privacy Protected</p>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-grid">
+            <!-- Left Column: Upload Area -->
+            <div class="upload-section">
+                <h3>📤 Upload Image</h3>
+                
+                <!-- Single Image Upload -->
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h4>Drag & Drop or Click to Browse</h4>
+                    <p>Supported formats: PNG, JPG, JPEG, GIF, BMP</p>
+                    <p style="font-size: 0.9em; color: #999;">Max size: 16MB</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+
+                <!-- File Info -->
+                <div id="fileInfo" class="file-info hidden">
+                    <p id="fileName"></p>
+                    <img id="previewImage" src="" alt="Preview" class="image-preview">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <button class="btn btn-primary" id="predictBtn" onclick="predictImage()">🔍 Predict</button>
+                    <button class="btn btn-secondary" id="clearBtn" onclick="clearUpload()" style="display: none;">Clear</button>
+                </div>
+
+                <!-- Batch Upload -->
+                <div class="batch-section">
+                    <details>
+                        <summary>📦 Batch Upload (Multiple Images)</summary>
+                        <div class="batch-content">
+                            <input type="file" id="batchFileInput" accept="image/*" multiple style="display: none;">
+                            <button class="btn btn-secondary" onclick="document.getElementById('batchFileInput').click()">Select Multiple Files</button>
+                            <div id="batchFileList" class="file-list"></div>
+                            <button class="btn btn-primary" id="batchPredictBtn" onclick="batchPredict()" style="display: none;">🔍 Predict All</button>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Right Column: Results Area -->
+            <div class="results-section">
+                <h3>📊 Results</h3>
+                
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="spinner hidden">
+                    <div class="spinner-circle"></div>
+                    <p>Analyzing image...</p>
+                </div>
+
+                <!-- Results Card -->
+                <div id="resultsCard" class="results-card hidden">
+                    <!-- Result Type -->
+                    <div id="resultType" class="result-type"></div>
+                    
+                    <!-- Confidence Bar -->
+                    <div class="confidence-container">
+                        <label>Confidence</label>
+                        <div class="confidence-bar">
+                            <div id="confidenceBarFill" class="confidence-bar-fill"></div>
+                        </div>
+                        <p id="confidenceText"></p>
+                    </div>
+
+                    <!-- Probabilities -->
+                    <div class="probabilities">
+                        <div class="probability-item">
+                            <label>Pneumonia Probability</label>
+                            <div class="probability-circle pneumonia">
+                                <span id="pneumoniaProb">0%</span>
+                            </div>
+                        </div>
+                        <div class="probability-item">
+                            <label>Normal Probability</label>
+                            <div class="probability-circle normal">
+                                <span id="normalProb">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Info -->
+                    <div class="detailed-info">
+                        <p><strong>Filename:</strong> <span id="resultFilename">-</span></p>
+                        <p><strong>Threshold Used:</strong> <span id="resultThreshold">0.5</span></p>
+                        <p><strong>Timestamp:</strong> <span id="resultTimestamp">-</span></p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="downloadResult()">⬇️ Download</button>
+                        <button class="btn btn-secondary" onclick="clearResults()">Clear Results</button>
+                    </div>
+                </div>
+
+                <!-- Error Alert -->
+                <div id="errorAlert" class="alert alert-error hidden"></div>
+
+                <!-- Info Message -->
+                <div id="infoMessage" class="info-message">
+                    <p>👈 Upload an image to get started</p>
+                </div>
+
+                <!-- Batch Results -->
+                <div id="batchResults" class="batch-results hidden">
+                    <h4>Batch Results</h4>
+                    <div id="batchResultsList" class="batch-results-list"></div>
+                    <button class="btn btn-secondary" onclick="clearBatchResults()">Clear All</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Images Section -->
+        <section class="test-images-section">
+            <h3>🖼️ Test Images</h3>
+            <p>Click any image to test the model</p>
+            <div class="test-images-grid" id="testImagesGrid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Information Section -->
+        <section class="info-section">
+            <div class="info-card">
+                <h4>🏥 About This System</h4>
+                <p>
+                    PneumoNet AI uses a pre-trained MobileNetV2 deep learning model with transfer learning 
+                    to detect pneumonia from chest X-ray images. The model has been trained and fine-tuned 
+                    on a large dataset of medical images.
+                </p>
+            </div>
+            <div class="info-card">
+                <h4>⚠️ Medical Disclaimer</h4>
+                <p>
+                    This tool is for research and demonstration purposes only. It should not be used for 
+                    actual medical diagnosis without professional medical consultation. Always consult a 
+                    qualified healthcare provider for medical advice.
+                </p>
+            </div>
+            <div class="info-card">
+                <h4>🔧 Technical Details</h4>
+                <p>
+                    Input: 224×224 RGB images | Output: Pneumonia probability (0-1) | 
+                    Model: MobileNetV2 + Custom layers | Framework: TensorFlow 2.20.0
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Threshold Modal -->
+    <div id="thresholdModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Classification Threshold</h3>
+                <button class="modal-close" onclick="closeThresholdModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Adjust the threshold to control sensitivity (0-1)</p>
+                <p style="font-size: 0.9em; color: #666;">
+                    Lower = More Sensitive (catches more cases) | Higher = More Specific
+                </p>
+                <div class="threshold-controls">
+                    <input type="range" id="thresholdSlider" min="0" max="1" step="0.05" value="0.5" 
+                           oninput="updateThresholdDisplay(this.value)">
+                    <input type="number" id="thresholdInput" min="0" max="1" step="0.05" value="0.5" 
+                           oninput="updateThresholdSlider(this.value)">
+                </div>
+                <p id="thresholdInfo" style="text-align: center; margin: 10px 0;">Current: 0.50</p>
+                <div class="threshold-info-box">
+                    <p><strong>Lower Threshold (0.3-0.4):</strong> Higher sensitivity, better for screening</p>
+                    <p><strong>Higher Threshold (0.6-0.7):</strong> Higher specificity, fewer false positives</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeThresholdModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="applyThreshold()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>PneumoNet AI v1.0 | Built with Flask & TensorFlow | 
+            <a href="#" onclick="alert('API Status: ' + (window.apiHealthy ? 'Healthy ✓' : 'Unavailable'))">API Status</a>
+        </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -362,6 +362,24 @@ def index():
     }), 200
 
 
+@app.route('/api/test-images', methods=['GET'])
+def get_test_images():
+    """Get list of available test images"""
+    try:
+        test_images_dir = 'test_images'
+        if not os.path.exists(test_images_dir):
+            return jsonify({'images': []}), 200
+        
+        images = [f for f in os.listdir(test_images_dir) 
+                 if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp'))]
+        images.sort()
+        
+        return jsonify({'images': images}), 200
+    except Exception as e:
+        logger.error(f"Error listing test images: {e}")
+        return jsonify({'images': []}), 200
+
+
 @app.errorhandler(404)
 def not_found(error):
     """Handle 404 errors"""
