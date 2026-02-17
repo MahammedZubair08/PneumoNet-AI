@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  pneumonet-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: pneumonet-ai-api
+    
+    ports:
+      - "5000:5000"
+    
+    environment:
+      FLASK_ENV: production
+      FLASK_DEBUG: "False"
+    
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    restart: unless-stopped
+    
+    # Optional: Resource limits
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2.0'
+    #       memory: 4G
+    #     reservations:
+    #       cpus: '1.0'
+    #       memory: 2G
+
+# Uncomment below for production setup with Nginx reverse proxy
+# 
+# services:
+#   pneumonet-api:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: pneumonet-ai-api
+#     expose:
+#       - "5000"
+#     environment:
+#       FLASK_ENV: production
+#     restart: unless-stopped
+#   
+#   nginx:
+#     image: nginx:latest
+#     container_name: pneumonet-nginx
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     volumes:
+#       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+#     depends_on:
+#       - pneumonet-api
+#     restart: unless-stopped
